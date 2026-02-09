@@ -146,34 +146,22 @@ namespace ImFlow
     class NodeStyle
     {
     public:
-        // Global default colors (can be set once for all nodes)
+        // Global static style properties (can be set once for all nodes)
         static ImU32 s_default_bg;
         static ImU32 s_default_border_color;
         static ImU32 s_default_border_selected_color;
+        static ImVec4 s_padding;
+        static float s_radius;
+        static float s_border_thickness;
+        static float s_border_selected_thickness;
 
         NodeStyle(ImU32 header_bg, ImColor header_title_color, float radius)
-            :header_bg(header_bg), header_title_color(header_title_color), radius(radius),
-             bg(s_default_bg), border_color(s_default_border_color), border_selected_color(s_default_border_selected_color) {}
+            :header_bg(header_bg), header_title_color(header_title_color) {}
 
-        /// @brief Body's background color
-        ImU32 bg;
-        /// @brief Header's background color
+        /// @brief Header's background color (per-node)
         ImU32 header_bg;
-        /// @brief Header title color
+        /// @brief Header title color (per-node)
         ImColor header_title_color;
-        /// @brief Border color
-        ImU32 border_color;
-        /// @brief Border color when selected
-        ImU32 border_selected_color;
-
-        /// @brief Body's content padding (Left Top Right Bottom)
-        ImVec4 padding = ImVec4(13.7f, 6.f, 13.7f, 2.f);
-        /// @brief Edges rounding
-        float radius;
-        /// @brief Border thickness
-        float border_thickness = -1.35f;
-        /// @brief Border thickness when selected
-        float border_selected_thickness = 2.f;
     public:
         /// @brief <BR>Default cyan style
         static std::shared_ptr<NodeStyle> cyan() { return std::make_shared<NodeStyle>(IM_COL32(71,142,173,255), ImColor(233,241,244,255), 6.5f); }

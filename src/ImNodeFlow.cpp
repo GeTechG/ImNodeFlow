@@ -5,10 +5,14 @@ namespace ImFlow {
     // -----------------------------------------------------------------------------------------------------------------
     // GLOBAL DEFAULTS
 
-    // Initialize global default colors for NodeStyle
+    // Initialize global default colors and style properties for NodeStyle
     ImU32 NodeStyle::s_default_bg = IM_COL32(55,64,75,255);
     ImU32 NodeStyle::s_default_border_color = IM_COL32(30,38,41,140);
     ImU32 NodeStyle::s_default_border_selected_color = IM_COL32(170, 190, 205, 230);
+    ImVec4 NodeStyle::s_padding = ImVec4(13.7f, 6.f, 13.7f, 2.f);
+    float NodeStyle::s_radius = 6.5f;
+    float NodeStyle::s_border_thickness = -1.35f;
+    float NodeStyle::s_border_selected_thickness = 2.f;
 
     // Initialize global default colors for InfColors
     ImU32 InfColors::s_default_background = IM_COL32(33,41,45,255);
@@ -54,8 +58,8 @@ namespace ImFlow {
     // BASE NODE
 
     bool BaseNode::isHovered() {
-        ImVec2 paddingTL = {m_style->padding.x, m_style->padding.y};
-        ImVec2 paddingBR = {m_style->padding.z, m_style->padding.w};
+        ImVec2 paddingTL = {NodeStyle::s_padding.x, NodeStyle::s_padding.y};
+        ImVec2 paddingBR = {NodeStyle::s_padding.z, NodeStyle::s_padding.w};
         return ImGui::IsMouseHoveringRect(m_inf->grid2screen(m_pos - paddingTL),
                                           m_inf->grid2screen(m_pos + m_size + paddingBR));
     }
@@ -65,8 +69,8 @@ namespace ImFlow {
         ImGui::PushID(this);
         bool mouseClickState = m_inf->getSingleUseClick();
         ImVec2 offset = m_inf->grid2screen({0.f, 0.f});
-        ImVec2 paddingTL = {m_style->padding.x, m_style->padding.y};
-        ImVec2 paddingBR = {m_style->padding.z, m_style->padding.w};
+        ImVec2 paddingTL = {NodeStyle::s_padding.x, NodeStyle::s_padding.y};
+        ImVec2 paddingBR = {NodeStyle::s_padding.z, NodeStyle::s_padding.w};
 
         draw_list->ChannelsSetCurrent(1); // Foreground
         ImGui::SetCursorScreenPos(offset + m_pos);
@@ -151,18 +155,18 @@ namespace ImFlow {
 
         // Background
         draw_list->ChannelsSetCurrent(0);
-        draw_list->AddRectFilled(offset + m_pos - paddingTL, offset + m_pos + m_size + paddingBR, m_style->bg,
-                                 m_style->radius);
+        draw_list->AddRectFilled(offset + m_pos - paddingTL, offset + m_pos + m_size + paddingBR, NodeStyle::s_default_bg,
+                                 NodeStyle::s_radius);
         draw_list->AddRectFilled(offset + m_pos - paddingTL, offset + m_pos + headerSize, m_style->header_bg,
-                                 m_style->radius, ImDrawFlags_RoundCornersTop);
+                                 NodeStyle::s_radius, ImDrawFlags_RoundCornersTop);
         m_fullSize = m_size + paddingTL + paddingBR;
-        ImU32 col = m_style->border_color;
-        float thickness = m_style->border_thickness;
+        ImU32 col = NodeStyle::s_default_border_color;
+        float thickness = NodeStyle::s_border_thickness;
         ImVec2 ptl = paddingTL;
         ImVec2 pbr = paddingBR;
         if (m_selected) {
-            col = m_style->border_selected_color;
-            thickness = m_style->border_selected_thickness;
+            col = NodeStyle::s_default_border_selected_color;
+            thickness = NodeStyle::s_border_selected_thickness;
         }
         if (thickness < 0.f) {
             ptl.x -= thickness / 2;
@@ -171,7 +175,7 @@ namespace ImFlow {
             pbr.y -= thickness / 2;
             thickness *= -1.f;
         }
-        draw_list->AddRect(offset + m_pos - ptl, offset + m_pos + m_size + pbr, col, m_style->radius, 0, thickness);
+        draw_list->AddRect(offset + m_pos - ptl, offset + m_pos + m_size + pbr, col, NodeStyle::s_radius, 0, thickness);
 
 
         if (ImGui::IsWindowHovered() && !ImGui::IsKeyDown(ImGuiKey_LeftCtrl) &&
