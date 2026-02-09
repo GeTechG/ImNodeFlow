@@ -12,6 +12,8 @@
 #include <functional>
 #include <unordered_map>
 #include <cstdint>
+
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 #include "../src/imgui_bezier_math.h"
 #include "../src/context_wrapper.h"
