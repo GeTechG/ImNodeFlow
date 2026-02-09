@@ -563,8 +563,10 @@ namespace ImFlow
         std::function<void(Pin* dragged)> m_droppedLinkPopUp;
         ImGuiKey m_droppedLinkPupUpComboKey = ImGuiKey_None;
         Pin* m_droppedLinkLeft = nullptr;
+        bool m_shouldOpenDroppedLinkPopup = false;
         std::function<void(BaseNode* node)> m_rightClickPopUp;
         BaseNode* m_hoveredNodeAux = nullptr;
+        bool m_shouldOpenRightClickPopup = false;
 
         BaseNode* m_hoveredNode = nullptr;
         bool m_draggingNode = false, m_draggingNodeNext = false;

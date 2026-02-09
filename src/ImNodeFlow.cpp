@@ -331,6 +331,8 @@ namespace ImFlow {
         m_magneticPin = nullptr;
         m_draggingNode = m_draggingNodeNext;
         m_singleUseClick = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+        m_shouldOpenRightClickPopup = false;
+        m_shouldOpenDroppedLinkPopup = false;
 
         // Create child canvas
         m_context.begin();
@@ -424,7 +426,7 @@ namespace ImFlow {
                     if (on_free_space() && m_droppedLinkPopUp) {
                         if (m_droppedLinkPupUpComboKey == ImGuiKey_None || ImGui::IsKeyDown(m_droppedLinkPupUpComboKey)) {
                             m_droppedLinkLeft = m_dragOut;
-                            ImGui::OpenPopup("DroppedLinkPopUp");
+                            m_shouldOpenDroppedLinkPopup = true;
                         }
                     }
                 } else {
@@ -435,20 +437,10 @@ namespace ImFlow {
             }
         }
 
-        // Right-click PopUp
+        // Right-click PopUp (set flag to open outside context)
         if (m_rightClickPopUp && ImGui::IsMouseClicked(ImGuiMouseButton_Right) && ImGui::IsWindowHovered()) {
             m_hoveredNodeAux = m_hoveredNode;
-            ImGui::OpenPopup("RightClickPopUp");
-        }
-        if (ImGui::BeginPopup("RightClickPopUp")) {
-            m_rightClickPopUp(m_hoveredNodeAux);
-            ImGui::EndPopup();
-        }
-
-        // Dropped Link PopUp
-        if (ImGui::BeginPopup("DroppedLinkPopUp")) {
-            m_droppedLinkPopUp(m_droppedLinkLeft);
-            ImGui::EndPopup();
+            m_shouldOpenRightClickPopup = true;
         }
 
         // Removing dead Links
@@ -459,5 +451,23 @@ namespace ImFlow {
         m_pinRecursionBlacklist.clear();
 
         m_context.end();
+
+        // Popups rendered outside context to avoid zoom/transform issues
+        // OpenPopup and BeginPopup must be in the same context
+        if (m_shouldOpenRightClickPopup) {
+            ImGui::OpenPopup("RightClickPopUp");
+        }
+        if (ImGui::BeginPopup("RightClickPopUp")) {
+            m_rightClickPopUp(m_hoveredNodeAux);
+            ImGui::EndPopup();
+        }
+
+        if (m_shouldOpenDroppedLinkPopup) {
+            ImGui::OpenPopup("DroppedLinkPopUp");
+        }
+        if (ImGui::BeginPopup("DroppedLinkPopUp")) {
+            m_droppedLinkPopUp(m_droppedLinkLeft);
+            ImGui::EndPopup();
+        }
     }
 }
