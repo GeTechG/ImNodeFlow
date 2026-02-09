@@ -1,4 +1,5 @@
 #include "ImNodeFlow.h"
+#include <cfloat>
 
 namespace ImFlow {
     // -----------------------------------------------------------------------------------------------------------------
@@ -240,10 +241,81 @@ namespace ImFlow {
         m_links.push_back(link);
     }
 
+    Pin* ImNodeFlow::findNearestPin(Pin* draggedPin, const ImVec2& mousePos) {
+        if (!draggedPin || !m_magnetismEnabled) {
+            return nullptr;
+        }
+
+        Pin* nearestSocketPin = nullptr;
+        float nearestSocketDistSq = FLT_MAX;
+
+        Pin* nearestTextPin = nullptr;
+        float nearestTextDistSq = FLT_MAX;
+
+        PinType targetType = (draggedPin->getType() == PinType_Output) ? PinType_Input : PinType_Output;
+
+        // Search through all nodes
+        for (auto& nodePair : m_nodes) {
+            const auto& node = nodePair.second;
+
+            // Get pins list based on target type
+            const auto& pins = (targetType == PinType_Input) ? node->getIns() : node->getOuts();
+
+            for (const auto& pin : pins) {
+                // Check if can connect using filters
+                bool canConnect = false;
+                if (draggedPin->getType() == PinType_Output) {
+                    canConnect = pin->canConnectWith(draggedPin);
+                } else {
+                    canConnect = draggedPin->canConnectWith(pin.get());
+                }
+
+                if (!canConnect) {
+                    continue;
+                }
+
+                // Calculate adaptive radiuses based on pin properties
+                float socketRadius = pin->getStyle()->socket_hovered_radius * 7.0f;
+                float socketRadiusSq = socketRadius * socketRadius;
+
+                ImVec2 pinSize = pin->getSize();
+                float pinMaxDim = std::max(pinSize.x, pinSize.y);
+                float textRadius = pinMaxDim * 1.2f + pin->getStyle()->extra.socket_padding;
+                float textRadiusSq = textRadius * textRadius;
+
+                // Calculate distance to pin socket
+                ImVec2 pinPoint = pin->pinPoint();
+                ImVec2 diff = mousePos - pinPoint;
+                float distSq = diff.x * diff.x + diff.y * diff.y;
+
+                // Check socket radius (priority 1)
+                if (distSq < socketRadiusSq && distSq < nearestSocketDistSq) {
+                    nearestSocketDistSq = distSq;
+                    nearestSocketPin = pin.get();
+                }
+
+                // Check text area radius (priority 2)
+                ImVec2 pinPos = grid2screen(pin->getPos());
+                ImVec2 pinCenter = pinPos + pinSize * 0.5f;
+                ImVec2 diffText = mousePos - pinCenter;
+                float distTextSq = diffText.x * diffText.x + diffText.y * diffText.y;
+
+                if (distTextSq < textRadiusSq && distTextSq < nearestTextDistSq) {
+                    nearestTextDistSq = distTextSq;
+                    nearestTextPin = pin.get();
+                }
+            }
+        }
+
+        // Prefer socket pin (higher priority), fallback to text pin
+        return nearestSocketPin ? nearestSocketPin : nearestTextPin;
+    }
+
     void ImNodeFlow::update() {
         // Updating looping stuff
         m_hovering = nullptr;
         m_hoveredNode = nullptr;
+        m_magneticPin = nullptr;
         m_draggingNode = m_draggingNodeNext;
         m_singleUseClick = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
 
@@ -284,32 +356,54 @@ namespace ImFlow {
         // Update and draw links
         for (auto &l: m_links) { if (!l.expired()) l.lock()->update(); }
 
-        // Links drop-off
-        if (m_dragOut && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-            if (!m_hovering) {
-                if (on_free_space() && m_droppedLinkPopUp) {
-                    if (m_droppedLinkPupUpComboKey == ImGuiKey_None || ImGui::IsKeyDown(m_droppedLinkPupUpComboKey)) {
-                        m_droppedLinkLeft = m_dragOut;
-                        ImGui::OpenPopup("DroppedLinkPopUp");
-                    }
-                }
-            } else
-                m_dragOut->createLink(m_hovering);
-        }
-
-        // Links drag-out
+        // Links drag-out (start dragging)
         if (!m_draggingNode && m_hovering && !m_dragOut && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
             m_dragOut = m_hovering;
+
+        // Links dragging and drop-off
         if (m_dragOut) {
+            ImVec2 mousePos = ImGui::GetMousePos();
+
+            // Find nearest compatible pin for magnetism
+            m_magneticPin = findNearestPin(m_dragOut, mousePos);
+
+            // Use magnetic pin position if found, otherwise use mouse position
+            ImVec2 targetPos = m_magneticPin ? m_magneticPin->pinPoint() : mousePos;
+
             if (m_dragOut->getType() == PinType_Output)
-                smart_bezier(m_dragOut->pinPoint(), ImGui::GetMousePos(), m_dragOut->getStyle()->color,
+                smart_bezier(m_dragOut->pinPoint(), targetPos, m_dragOut->getStyle()->color,
                              m_dragOut->getStyle()->extra.link_dragged_thickness);
             else
-                smart_bezier(ImGui::GetMousePos(), m_dragOut->pinPoint(), m_dragOut->getStyle()->color,
+                smart_bezier(targetPos, m_dragOut->pinPoint(), m_dragOut->getStyle()->color,
                              m_dragOut->getStyle()->extra.link_dragged_thickness);
 
-            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+            // Draw hover effect for magnetic pin (same as hover)
+            if (m_magneticPin) {
+                ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                draw_list->AddCircle(m_magneticPin->pinPoint(),
+                                    m_magneticPin->getStyle()->socket_hovered_radius,
+                                    m_magneticPin->getStyle()->color,
+                                    m_magneticPin->getStyle()->socket_shape,
+                                    m_magneticPin->getStyle()->socket_thickness);
+            }
+
+            // Check for mouse release (drop-off)
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                Pin* targetPin = m_hovering ? m_hovering : m_magneticPin;
+
+                if (!targetPin) {
+                    if (on_free_space() && m_droppedLinkPopUp) {
+                        if (m_droppedLinkPupUpComboKey == ImGuiKey_None || ImGui::IsKeyDown(m_droppedLinkPupUpComboKey)) {
+                            m_droppedLinkLeft = m_dragOut;
+                            ImGui::OpenPopup("DroppedLinkPopUp");
+                        }
+                    }
+                } else {
+                    m_dragOut->createLink(targetPin);
+                }
+
                 m_dragOut = nullptr;
+            }
         }
 
         // Right-click PopUp

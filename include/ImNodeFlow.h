@@ -518,7 +518,27 @@ namespace ImFlow
          * @return Reference to blacklist
          */
         std::vector<std::string>& get_recursion_blacklist() { return m_pinRecursionBlacklist; }
+
+        /**
+         * @brief <BR>Enable or disable magnetism
+         * @param enabled True to enable magnetism (default: true)
+         */
+        void setMagnetismEnabled(bool enabled) { m_magnetismEnabled = enabled; }
+
+        /**
+         * @brief <BR>Check if magnetism is enabled
+         * @return True if magnetism is enabled
+         */
+        bool isMagnetismEnabled() const { return m_magnetismEnabled; }
+
     private:
+        /**
+         * @brief <BR>Find nearest compatible pin for magnetism
+         * @param draggedPin Pin being dragged
+         * @param mousePos Current mouse position
+         * @return Nearest compatible pin or nullptr
+         */
+        Pin* findNearestPin(Pin* draggedPin, const ImVec2& mousePos);
         std::string m_name;
         ContainedContext m_context;
 
@@ -538,7 +558,9 @@ namespace ImFlow
         bool m_draggingNode = false, m_draggingNodeNext = false;
         Pin* m_hovering = nullptr;
         Pin* m_dragOut = nullptr;
+        Pin* m_magneticPin = nullptr;
 
+        bool m_magnetismEnabled = true;
         InfStyler m_style;
     };
 
@@ -985,6 +1007,13 @@ namespace ImFlow
         virtual void createLink(Pin* other) = 0;
 
         /**
+         * @brief <BR>Check if this pin can connect with another pin
+         * @param other Pointer to the other pin
+         * @return [TRUE] if connection is possible
+         */
+        virtual bool canConnectWith(Pin* other) = 0;
+
+        /**
          * @brief <BR>Set the reference to a link
          * @param link Smart pointer to the link
          */
@@ -1122,6 +1151,13 @@ namespace ImFlow
         void createLink(Pin* other) override;
 
         /**
+         * @brief <BR>Check if this pin can connect with another pin
+         * @param other Pointer to the other pin
+         * @return [TRUE] if connection is possible
+         */
+        bool canConnectWith(Pin* other) override;
+
+        /**
         * @brief <BR>Delete the link connected to the pin
         */
         void deleteLink() override { m_link.reset(); }
@@ -1206,6 +1242,13 @@ namespace ImFlow
          * @param other Pointer to the other pin
          */
         void createLink(Pin* other) override;
+
+        /**
+         * @brief <BR>Check if this pin can connect with another pin
+         * @param other Pointer to the other pin
+         * @return [TRUE] if connection is possible
+         */
+        bool canConnectWith(Pin* other) override;
 
         /**
          * @brief <BR>Add a connected link to the internal list

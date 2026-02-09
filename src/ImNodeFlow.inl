@@ -299,6 +299,24 @@ namespace ImFlow
     }
 
     template<class T>
+    bool InPin<T>::canConnectWith(Pin *other)
+    {
+        if (other == this || other->getType() == PinType_Input)
+            return false;
+
+        if (m_parent == other->getParent() && !m_allowSelfConnection)
+            return false;
+
+        if (m_link && m_link->left() == other)
+            return false;
+
+        if (!m_filter(other, this)) // Check Filter
+            return false;
+
+        return true;
+    }
+
+    template<class T>
     void InPin<T>::createLink(Pin *other)
     {
         if (other == this || other->getType() == PinType_Input)
@@ -338,7 +356,16 @@ namespace ImFlow
     }
 
     template<class T>
-    void OutPin<T>::createLink(ImFlow::Pin *other)
+    bool OutPin<T>::canConnectWith(Pin *other)
+    {
+        if (other == this || other->getType() == PinType_Output)
+            return false;
+
+        return other->canConnectWith(this);
+    }
+
+    template<class T>
+    void OutPin<T>::createLink(Pin *other)
     {
         if (other == this || other->getType() == PinType_Output)
             return;
