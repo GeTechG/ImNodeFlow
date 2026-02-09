@@ -146,18 +146,25 @@ namespace ImFlow
     class NodeStyle
     {
     public:
-        NodeStyle(ImU32 header_bg, ImColor header_title_color, float radius) :header_bg(header_bg), header_title_color(header_title_color), radius(radius) {}
+        // Global default colors (can be set once for all nodes)
+        static ImU32 s_default_bg;
+        static ImU32 s_default_border_color;
+        static ImU32 s_default_border_selected_color;
+
+        NodeStyle(ImU32 header_bg, ImColor header_title_color, float radius)
+            :header_bg(header_bg), header_title_color(header_title_color), radius(radius),
+             bg(s_default_bg), border_color(s_default_border_color), border_selected_color(s_default_border_selected_color) {}
 
         /// @brief Body's background color
-        ImU32 bg = IM_COL32(55,64,75,255);
+        ImU32 bg;
         /// @brief Header's background color
         ImU32 header_bg;
         /// @brief Header title color
         ImColor header_title_color;
         /// @brief Border color
-        ImU32 border_color = IM_COL32(30,38,41,140);
+        ImU32 border_color;
         /// @brief Border color when selected
-        ImU32 border_selected_color = IM_COL32(170, 190, 205, 230);
+        ImU32 border_selected_color;
 
         /// @brief Body's content padding (Left Top Right Bottom)
         ImVec4 padding = ImVec4(13.7f, 6.f, 13.7f, 2.f);
@@ -246,12 +253,17 @@ namespace ImFlow
      */
     struct InfColors
     {
+        // Global default colors (can be set once for all editors)
+        static ImU32 s_default_background;
+        static ImU32 s_default_grid;
+        static ImU32 s_default_subGrid;
+
         /// @brief Background of the grid
-        ImU32 background = IM_COL32(33,41,45,255);
+        ImU32 background = s_default_background;
         /// @brief Main lines of the grid
-        ImU32 grid = IM_COL32(200, 200, 200, 40);
+        ImU32 grid = s_default_grid;
         /// @brief Secondary lines
-        ImU32 subGrid = IM_COL32(200, 200, 200, 10);
+        ImU32 subGrid = s_default_subGrid;
     };
 
     /**

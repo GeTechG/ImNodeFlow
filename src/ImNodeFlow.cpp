@@ -3,6 +3,19 @@
 
 namespace ImFlow {
     // -----------------------------------------------------------------------------------------------------------------
+    // GLOBAL DEFAULTS
+
+    // Initialize global default colors for NodeStyle
+    ImU32 NodeStyle::s_default_bg = IM_COL32(55,64,75,255);
+    ImU32 NodeStyle::s_default_border_color = IM_COL32(30,38,41,140);
+    ImU32 NodeStyle::s_default_border_selected_color = IM_COL32(170, 190, 205, 230);
+
+    // Initialize global default colors for InfColors
+    ImU32 InfColors::s_default_background = IM_COL32(33,41,45,255);
+    ImU32 InfColors::s_default_grid = IM_COL32(200, 200, 200, 40);
+    ImU32 InfColors::s_default_subGrid = IM_COL32(200, 200, 200, 10);
+
+    // -----------------------------------------------------------------------------------------------------------------
     // LINK
 
     void Link::update() {
