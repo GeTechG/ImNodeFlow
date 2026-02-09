@@ -357,8 +357,24 @@ namespace ImFlow {
         for (auto &l: m_links) { if (!l.expired()) l.lock()->update(); }
 
         // Links drag-out (start dragging)
-        if (!m_draggingNode && m_hovering && !m_dragOut && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-            m_dragOut = m_hovering;
+        if (!m_draggingNode && m_hovering && !m_dragOut && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            // If the pin is already connected, switch to dragging from the opposite end
+            if (m_hovering->isConnected()) {
+                auto link = m_hovering->getLink().lock();
+                if (link) {
+                    // Get the opposite end of the link
+                    Pin* oppositePin = (m_hovering->getType() == PinType_Output) ? link->right() : link->left();
+                    // Delete the link first
+                    m_hovering->deleteLink();
+                    // Start dragging from the opposite pin
+                    m_dragOut = oppositePin;
+                } else {
+                    m_dragOut = m_hovering;
+                }
+            } else {
+                m_dragOut = m_hovering;
+            }
+        }
 
         // Links dragging and drop-off
         if (m_dragOut) {
