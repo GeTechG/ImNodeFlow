@@ -434,7 +434,8 @@ namespace ImFlow {
                         }
                     }
                 } else {
-                    m_dragOut->createLink(targetPin);
+                    if (m_dragOut->canConnectWith(targetPin))
+                        m_dragOut->createLink(targetPin);
                 }
 
                 m_dragOut = nullptr;
