@@ -1205,6 +1205,18 @@ namespace ImFlow
          * @return Reference to the value of the connected OutPin. Or the default value if not connected
          */
         const T& val();
+
+        /**
+         * @brief <BR>Update the default value returned when the pin is not connected
+         * @param val New default value
+         */
+        void setDefault(const T& val) { m_emptyVal = val; }
+
+        /**
+         * @brief <BR>Get the default value returned when the pin is not connected
+         * @return Const reference to the default value
+         */
+        const T& getDefault() const { return m_emptyVal; }
     private:
         std::shared_ptr<Link> m_link;
         T m_emptyVal;
