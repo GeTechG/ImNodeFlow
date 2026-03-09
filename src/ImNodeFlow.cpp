@@ -452,9 +452,6 @@ namespace ImFlow {
         m_links.erase(std::remove_if(m_links.begin(), m_links.end(),
                                      [](const std::weak_ptr<Link> &l) { return l.expired(); }), m_links.end());
 
-        // Clearing recursion blacklist
-        m_pinRecursionBlacklist.clear();
-
         m_context.end();
 
         // Popups rendered outside context to avoid zoom/transform issues

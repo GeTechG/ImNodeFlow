@@ -520,6 +520,11 @@ namespace ImFlow
         std::vector<std::string>& get_recursion_blacklist() { return m_pinRecursionBlacklist; }
 
         /**
+         * @brief <BR>Clear the recursion blacklist (call once per game frame, independently of UI rendering)
+         */
+        void clear_recursion_blacklist() { m_pinRecursionBlacklist.clear(); }
+
+        /**
          * @brief <BR>Enable or disable magnetism
          * @param enabled True to enable magnetism (default: true)
          */
