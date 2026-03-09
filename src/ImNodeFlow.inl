@@ -263,15 +263,19 @@ namespace ImFlow
 
     inline void Pin::update()
     {
+        drawDecoration();
+        drawSocket();
+        
         // Custom rendering
         if (m_renderer)
         {
+            ImGui::SetCursorPos(m_pos);
             ImGui::BeginGroup();
+            ImGui::Text("%s", m_name.c_str());
+            ImGui::SameLine();
             m_renderer(this);
             ImGui::EndGroup();
             m_size = ImGui::GetItemRectSize();
-            if (ImGui::IsItemHovered())
-                (*m_inf)->hovering(this);
             return;
         }
 
@@ -279,8 +283,6 @@ namespace ImFlow
         ImGui::Text("%s", m_name.c_str());
         m_size = ImGui::GetItemRectSize();
 
-        drawDecoration();
-        drawSocket();
 
         if (ImGui::IsItemHovered())
             (*m_inf)->hovering(this);
